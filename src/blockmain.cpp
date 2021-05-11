@@ -21,11 +21,11 @@
 //defining global consts
 
 const auto aspect_ratio = 1.0 / 1.0;
-const int image_width = 64;
+const int image_width = 512;
 const int image_height = static_cast<int>(image_width / aspect_ratio);
-const int samples_per_pixel = 100;
+const int samples_per_pixel = 10000;
 const int max_depth = 100;
-color background(1,1,1);
+color background(0,0,0);
 
 auto world = final_scene();
 
@@ -131,8 +131,10 @@ struct Task {
         std::lock_guard<std::mutex> guard{m};
 
         bool found = false;
-        int x, y;
+        int x, y, i;
+        i = 0;
         while (!found) {
+            i++;
             move_in_pattern(x, y);
             if (x < 0 || x > W_CNT || y < 0 || y > H_CNT) break;
 
@@ -141,6 +143,7 @@ struct Task {
                 sy = y * N;
                 taken[y][x] = true;
                 found = true;
+                std::cout << "found task after : " << i << " searches" << std::endl;
             }
         }
         return found;
@@ -181,7 +184,7 @@ struct Task {
 int Task::id = 0;
 
 int main() {
-    const unsigned int n_threads = std::thread::hardware_concurrency() / 2;
+    const unsigned int n_threads = std::thread::hardware_concurrency() / 1;
     std::cout << "Detected " << n_threads << " concurrent threads." << std::endl;
     std::vector<std::thread> threads{n_threads};
 

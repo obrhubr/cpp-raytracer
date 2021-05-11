@@ -1,6 +1,6 @@
 #OBJS specifies which files to compile as part of the project
-OBJS= src/main.cpp
-#OBJS= src/blockmain.cpp
+#OBJS= src/main.cpp
+OBJS= src/blockmain.cpp
 
 #CC specifies which compiler we're using
 CC = g++
@@ -14,7 +14,7 @@ CC = g++
 #COMPILER_FLAGS specifies the additional compilation options we're using
 # -w suppresses all warnings
 # -Wl,-subsystem,windows gets rid of the console window
-COMPILER_FLAGS = -Wall
+COMPILER_FLAGS = -Wall -pthread
 
 #OBJ_NAME specifies the name of our exectuable
 OBJ_NAME = raytracer.exe
