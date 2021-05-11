@@ -25,24 +25,22 @@ const auto aspect_ratio = 1.0 / 1.0;
 const int image_width = 512;
 const int image_height = static_cast<int>(image_width / aspect_ratio);
 const int samples_per_pixel = 10000;
-const int max_depth = 5;
+const int max_depth = 50;
 color background(0,0,0);
 
-auto world = random_scene();
+auto world = final_scene();
 
 point3 lookfrom = point3(478, 278, -600);
 point3 lookat = point3(278, 278, 0);
 vec3 vup(0,1,0);
 auto dist_to_focus = 10.0;
-auto aperture = 0.1;
+auto aperture = 0.0;
 auto vfov = 40.0;
 
 int image_num = 10;
 int thread_num = 2;
 
-camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, circle_motion);
-
-constexpr unsigned N = 16;
+constexpr unsigned N = 64;
 
 constexpr unsigned W_CNT = (image_width + N - 1) / N;
 constexpr unsigned H_CNT = (image_height + N - 1) / N;
@@ -155,7 +153,8 @@ struct Task {
                 continue;
             }
 
-            
+            camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus);
+
             for (unsigned y = sy; y < sy + N; y++)
             for (unsigned x = sx; x < sx + N; x++) {
                 if (x < 0 || y < 0 || x >= image_width || y >= image_height) continue;
@@ -163,8 +162,8 @@ struct Task {
                 for (unsigned s = 0; s < samples_per_pixel; s++) {
                     const float u = float(x + random_double()) / float(image_width);
                     const float v = float(y + random_double()) / float(image_height);
-                    ray r = cam.get_ray(u, v, 0);
-                    col += ray_color(r, background, world, 5);
+                    ray r = cam.get_ray(u, v);
+                    col += ray_color(r, background, world, max_depth);
                 }
                 pixels.accumulate(x, y, col);
             }
@@ -183,8 +182,6 @@ struct Task {
 int Task::id = 0;
 
 int main(int argc, char **argv) {
-    world = random_scene();
-
     const unsigned int n_threads = std::thread::hardware_concurrency() / 4;
     std::cout << "Detected " << n_threads << " concurrent threads." << std::endl;
     std::vector<std::thread> threads{n_threads};
@@ -226,6 +223,16 @@ int main(int argc, char **argv) {
 					if( e.type == SDL_QUIT )
 					{
 						quit = true;
+
+                        auto image = pixels.get_pixels();
+                        std::ofstream ofs("./output/block.ppm", std::ios::out | std::ios::binary);
+                        ofs << "P6\n" << image_width << " " << image_height << "\n255\n";
+                        for (unsigned i = 0; i < image_width * image_height; ++i) {
+                            ofs << image[i*3+0] <<
+                                image[i*3+1] <<
+                                image[i*3+2];
+                        }
+                        ofs.close();
 					}
 
 				}
@@ -260,7 +267,16 @@ int main(int argc, char **argv) {
 	//Quit SDL subsystems
 	SDL_Quit();
 
-    
+    auto image = pixels.get_pixels();
+
+    std::ofstream ofs("./output/block.ppm", std::ios::out | std::ios::binary);
+    ofs << "P6\n" << image_width << " " << image_height << "\n255\n";
+    for (unsigned i = 0; i < image_width * image_height; ++i) {
+        ofs << image[i*3+0] <<
+               image[i*3+1] <<
+               image[i*3+2];
+    }
+    ofs.close();    
 
     return 0;
 }

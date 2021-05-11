@@ -39,6 +39,52 @@ color ray_color(const ray& r, const color& background, const hittable& world, in
 }
 
 hittable_list random_scene() {
+    hittable_list world;
+
+    auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
+    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
+
+    for (int a = -11; a < 11; a++) {
+        for (int b = -11; b < 11; b++) {
+            auto choose_mat = random_double();
+            point3 center(a + 0.9*random_double(), 0.2, b + 0.9*random_double());
+
+            if ((center - point3(4, 0.2, 0)).length() > 0.9) {
+                shared_ptr<material> sphere_material;
+
+                if (choose_mat < 0.8) {
+                    // diffuse
+                    auto albedo = color::random() * color::random();
+                    sphere_material = make_shared<lambertian>(albedo);
+                    world.add(make_shared<sphere>(center, 0.2, sphere_material));
+                } else if (choose_mat < 0.95) {
+                    // metal
+                    auto albedo = color::random(0.5, 1);
+                    auto fuzz = random_double(0, 0.5);
+                    sphere_material = make_shared<metal>(albedo, fuzz);
+                    world.add(make_shared<sphere>(center, 0.2, sphere_material));
+                } else {
+                    // glass
+                    sphere_material = make_shared<dielectric>(1.5);
+                    world.add(make_shared<sphere>(center, 0.2, sphere_material));
+                }
+            }
+        }
+    }
+
+    auto material1 = make_shared<dielectric>(1.5);
+    world.add(make_shared<sphere>(point3(0, 1, 0), 1.0, material1));
+
+    auto material2 = make_shared<lambertian>(color(0.4, 0.2, 0.1));
+    world.add(make_shared<sphere>(point3(-4, 1, 0), 1.0, material2));
+
+    auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
+    world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
+
+    return world;
+}
+
+hittable_list final_scene() {
     hittable_list boxes1;
     auto ground = make_shared<lambertian>(color(0.48, 0.83, 0.53));
 
@@ -93,11 +139,17 @@ hittable_list random_scene() {
         )
     );
 
+    shared_ptr<hittable> box2 = make_shared<box>(point3(-1000.0,1,-1000.0), point3(2000.0,150,2000.0), white);
+    box2 = make_shared<rotate_y>(box2, -18);
+    box2 = make_shared<translate>(box2, vec3(130,0,65));
+    objects.add(make_shared<constant_medium>(box2, 0.005, color(1,1,1)));
+
     return objects;
 }
 
 point3 circle_motion(int i) {
-    double theta = i / 5;
+    double theta = i;
+    theta /= 5;
     double r = 13;
     return point3(std::cos(theta)*r, 0, std::sin(theta)*r);
 }
@@ -114,7 +166,7 @@ void render_image(camera cam, std::string num, int image_width, int image_height
             for (int s = 0; s < samples_per_pixel; ++s) {
                 auto u = (i + random_double()) / (image_width-1);
                 auto v = (j + random_double()) / (image_height-1);
-                ray r = cam.get_ray(u, v, time);
+                ray r = cam.get_ray(u, v);
                 pixel_color += ray_color(r, background, world, max_depth);
             }
             write_color(ppm, pixel_color, samples_per_pixel);
@@ -124,9 +176,11 @@ void render_image(camera cam, std::string num, int image_width, int image_height
     std::cerr << "\nDone: " + num + "\n";
 }
 
-void render_multi_nothread(int image_num, point3 lookfrom, point3 lookat, point3 vup, double vfov, double aspect_ratio, double aperture, double dist_to_focus, camera cam, int image_width, int image_height, int samples_per_pixel, hittable_list world, int max_depth, color background) {
+void render_multi_nothread(int image_num, point3 lookfrom, point3 lookat, point3 vup, double vfov, double aspect_ratio, double aperture, double dist_to_focus, int image_width, int image_height, int samples_per_pixel, hittable_list world, int max_depth, color background) {
     for(int i = 0; i < image_num; i++) {
-        
+        /* auto lf = lookfrom - circle_motion(i); */
+        auto lf = lookfrom;
+        camera cam(lf, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus);
         std::string num = std::string(3 - std::to_string(i).length(), '0') + std::to_string(i);
         render_image(cam, num, image_width, image_height, samples_per_pixel, world, max_depth, background, i);
     }
@@ -136,6 +190,7 @@ void render_multi_thread(int image_num, int thread_num, point3 lookfrom, point3 
     for(int i = 0; i < std::ceil(image_num/thread_num); i++) {
         std::vector<std::thread> all_threads;
         for(int j = 0; j < thread_num; j++) {
+            camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus);
             std::string num = std::string(3 - std::to_string((j + i*thread_num)).length(), '0') + std::to_string((j + i*thread_num));
             std::thread t(render_image, cam, num, image_width, image_height, samples_per_pixel, world, max_depth, background, i*thread_num+j);
             all_threads.push_back(std::move(t));

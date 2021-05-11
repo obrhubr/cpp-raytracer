@@ -20,23 +20,26 @@
 
 //defining global consts
 
-const auto aspect_ratio = 2.0 / 1.0;
-const int image_width = 1024;
+const auto aspect_ratio = 1.0 / 1.0;
+const int image_width = 64;
 const int image_height = static_cast<int>(image_width / aspect_ratio);
 const int samples_per_pixel = 100;
-const int max_depth = 5;
-color background = color(0.70, 0.80, 1.00);
+const int max_depth = 100;
+color background(1,1,1);
 
-auto world = random_scene();
+auto world = final_scene();
 
-point3 lookfrom(13,2,3);
-point3 lookat(0,0,0);
+point3 lookfrom = point3(478, 278, -600);
+point3 lookat = point3(278, 278, 0);
 vec3 vup(0,1,0);
 auto dist_to_focus = 10.0;
-auto aperture = 0.1;
-auto vfov = 20.0;
+auto aperture = 0.0;
+auto vfov = 40.0;
 
-camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus, circle_motion);
+camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus);
+
+int image_num = 10;
+int thread_num = 6;
 
 constexpr unsigned N = 16;
 
@@ -150,7 +153,6 @@ struct Task {
                 done = true;
                 continue;
             }
-
             
             for (unsigned y = sy; y < sy + N; y++)
             for (unsigned x = sx; x < sx + N; x++) {
@@ -159,8 +161,8 @@ struct Task {
                 for (unsigned s = 0; s < samples_per_pixel; s++) {
                     const float u = float(x + random_double()) / float(image_width);
                     const float v = float(y + random_double()) / float(image_height);
-                    ray r = cam.get_ray(u, v, 0);
-                    col += ray_color(r, background, world, 5);
+                    ray r = cam.get_ray(u, v);
+                    col += ray_color(r, background, world, max_depth);
                 }
                 pixels.accumulate(x, y, col);
             }
@@ -179,9 +181,7 @@ struct Task {
 int Task::id = 0;
 
 int main() {
-    world = random_scene();
-
-    const unsigned int n_threads = std::thread::hardware_concurrency() / 4;
+    const unsigned int n_threads = std::thread::hardware_concurrency() / 2;
     std::cout << "Detected " << n_threads << " concurrent threads." << std::endl;
     std::vector<std::thread> threads{n_threads};
 
