@@ -7,6 +7,7 @@
 #include "color.h"
 #include "hittable_list.h"
 #include "sphere.h"
+#include "lens.h"
 #include "material.h"
 #include "aarect.h"
 #include "box.h"
@@ -36,6 +37,57 @@ color ray_color(const ray& r, const color& background, const hittable& world, in
         return emitted;
 
     return emitted + attenuation * ray_color(scattered, background, world, depth-1);
+}
+
+hittable_list di_test(double thickness) {
+    hittable_list world;
+
+    // the ground
+    auto ground_material = make_shared<lambertian>(color(0.7, 0.7, 0.7));
+    world.add(make_shared<sphere>(point3(0,-1000.5,-1), 1000, ground_material));
+
+    // the backdrop
+    /* auto back_mat = make_shared<lambertian>(color(1, 1, 1));
+    world.add(make_shared<sphere>(point3(0,1,1005), 1000, back_mat)); */
+
+    // the lens
+    auto material1 = make_shared<dielectric>(1.52);
+    world.add(make_shared<lens>(point3(0,1,-7), point3(0, 0, 1), 1.0, thickness, material1));
+
+
+    // lit up F
+    auto obj_mat = make_shared<lambertian>(color(0.5, 0.7, 0.5));
+    world.add(make_shared<box>(point3(-0.5,0.0,-10), point3(0.0,0.4,-10), obj_mat));
+    world.add(make_shared<box>(point3(-0.5,0.4,-10), point3(0.0,0.8,-10), obj_mat));
+    world.add(make_shared<box>(point3(-0.5,0.8,-10), point3(0.0,1.2,-10), obj_mat));
+    world.add(make_shared<box>(point3(-0.5,1.2,-10), point3(0.0,1.6,-10), obj_mat));
+    world.add(make_shared<box>(point3(-0.5,1.6,-10), point3(0.0,2.0,-10), obj_mat));
+
+    world.add(make_shared<box>(point3(0.0,1.6,-10), point3(0.5,2.0,-10), obj_mat));
+    world.add(make_shared<box>(point3(0.0,0.8,-10), point3(0.5,1.2,-10), obj_mat));
+
+    return world;
+}
+
+hittable_list lens_showcase() {
+    hittable_list objects;
+
+    auto red = make_shared<lambertian>(color(.65, .05, .05));
+    auto white = make_shared<lambertian>(color(.73, .73, .73));
+    auto green = make_shared<lambertian>(color(.12, .45, .15));
+    auto light = make_shared<diffuse_light>(color(15, 15, 15));
+
+    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
+    objects.add(make_shared<yz_rect>(0, 555, 0, 555, 0, red));
+    objects.add(make_shared<xz_rect>(213, 343, 227, 332, 554, light));
+    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
+    objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
+    objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
+
+    objects.add(make_shared<box>(point3(130, 0, 65), point3(295, 165, 230), white));
+    objects.add(make_shared<box>(point3(265, 0, 295), point3(430, 330, 460), white));
+
+    return objects;
 }
 
 hittable_list random_scene() {

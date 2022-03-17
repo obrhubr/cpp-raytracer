@@ -144,6 +144,13 @@ inline vec3 refract(const vec3& uv, const vec3& n, double etai_over_etat) {
     return r_out_perp + r_out_parallel;
 }
 
+inline double distance(const vec3 v1, const vec3 v2) {
+    double lambda_x = v2.x() - v1.x();
+    double lambda_y = v2.y() - v1.y();
+    double lambda_z = v2.z() - v1.z();
+    return sqrt((lambda_x * lambda_x) + (lambda_y * lambda_y) + (lambda_z * lambda_z));
+}
+
 vec3 random_in_unit_disk() {
     while (true) {
         auto p = vec3(random_double(-1,1), random_double(-1,1), 0);

@@ -1,1 +1,1 @@
-ffmpeg -i output/image%03d.ppm -c:v libx264 -vf fps=100 -pix_fmt yuv420p output/out.mp4 -y
+ffmpeg -i output/image%d.ppm -c:v libx264 -vf fps=60 -pix_fmt yuv420p output/out.mp4 -y

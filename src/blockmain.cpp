@@ -21,27 +21,26 @@
 //defining global consts
 
 const auto aspect_ratio = 1.0 / 1.0;
-const int image_width = 512;
+const int image_width = 1024;
 const int image_height = static_cast<int>(image_width / aspect_ratio);
-const int samples_per_pixel = 10000;
-const int max_depth = 100;
-color background(0,0,0);
+const int samples_per_pixel = 100;
+const int max_depth = 10;
+color background(1,1,1);
 
-auto world = final_scene();
-
-point3 lookfrom = point3(478, 278, -600);
-point3 lookat = point3(278, 278, 0);
+point3 lookfrom = point3(-2, 1, -4);
+point3 lookat = point3(0, 1, -7);
 vec3 vup(0,1,0);
-auto dist_to_focus = 10.0;
+auto dist_to_focus = (lookfrom - lookat).length();
 auto aperture = 0.0;
 auto vfov = 40.0;
 
-camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus);
+auto cam = camera(lookfrom, lookat, vup, vfov, aspect_ratio, aperture, dist_to_focus);
+auto world = di_test(0);
 
 int image_num = 10;
 int thread_num = 6;
 
-constexpr unsigned N = 16;
+constexpr unsigned N = 32;
 
 constexpr unsigned W_CNT = (image_width + N - 1) / N;
 constexpr unsigned H_CNT = (image_height + N - 1) / N;
@@ -143,7 +142,7 @@ struct Task {
                 sy = y * N;
                 taken[y][x] = true;
                 found = true;
-                std::cout << "found task after : " << i << " searches" << std::endl;
+                //std::cout << "found task after : " << i << " searches" << std::endl;
             }
         }
         return found;
@@ -184,7 +183,7 @@ struct Task {
 int Task::id = 0;
 
 int main() {
-    const unsigned int n_threads = std::thread::hardware_concurrency() / 1;
+    const unsigned int n_threads = thread_num;
     std::cout << "Detected " << n_threads << " concurrent threads." << std::endl;
     std::vector<std::thread> threads{n_threads};
 
