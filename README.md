@@ -2,7 +2,7 @@
 
 I used this wonderful article to build the actual raytracer, before modifying it [https://raytracing.github.io/books/RayTracingTheNextWeek.html](https://raytracing.github.io/).
 
-![render.png](./readme-files/render.png)
+![main.png](./readme-files/main.png)
 
 Then I added a new type of object, a lens.
 
