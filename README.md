@@ -1,6 +1,5 @@
 # Raytracer written in C++
 
-<<<<<<< HEAD
 I used this wonderful article to build the actual raytracer, before modifying it [https://raytracing.github.io/books/RayTracingTheNextWeek.html](https://raytracing.github.io/).
 
 ![render.png](./readme-files/render.png)
@@ -101,8 +100,3 @@ static point3 get_normal(point3 hit_point, point3 center, double thickness, doub
 This GIF shows the lenses with increasing thickness (from `0.5` to `2.0`) and the camera going from left to right. You can see it doesn't look perfect nor does it look perfectly realistic, but there is a lens-like effect going on.
 
 ![Lenses](./readme-files/lenses.gif)
-=======
-My version of [https://raytracing.github.io/books/RayTracingTheNextWeek.html](https://raytracing.github.io/). I slightly modified the code, experimented with lenses and added multicore rendering.
-
-![render.png](render.png)
->>>>>>> a01f5ddf1db8ed4601ee6e16281d5f1c55d039bf
